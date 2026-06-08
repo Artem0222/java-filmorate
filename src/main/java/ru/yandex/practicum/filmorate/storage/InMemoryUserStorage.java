@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import lombok.extern.java.Log;
+
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
 
