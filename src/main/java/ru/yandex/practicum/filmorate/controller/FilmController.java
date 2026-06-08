@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
@@ -53,7 +54,7 @@ public class FilmController {
             throw new ValidationException("id должен быть указан");
         }
         if (!filmStorage.existsById(film.getId())) {
-            throw new ValidationException("Фильм не найден");
+            throw new NotFoundException("Фильм не найден");
         }
         validateFilm(film);
         return filmStorage.update(film);
