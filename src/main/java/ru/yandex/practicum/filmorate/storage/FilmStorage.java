@@ -10,6 +10,6 @@ public interface FilmStorage {
     Optional<Film> findById(Long id);
     Film save(Film film);
     Film update(Film film);
-    void deleteByID(Long id);
+    void deleteById(Long id);
     boolean existsById(Long id);
 }

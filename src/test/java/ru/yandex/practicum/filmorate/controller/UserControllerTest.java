@@ -9,9 +9,7 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Тесты для валидации пользователей
- */
+
 class UserControllerTest {
 
     private UserController controller;
