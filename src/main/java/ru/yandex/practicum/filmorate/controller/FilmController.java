@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -14,6 +16,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
+@Validated
 @Slf4j
 @RequestMapping("/films")
 @RestController
@@ -37,7 +40,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film findById(@PathVariable Long id) {
+    public Film findById(@PathVariable @Positive Long id) {
         return filmStorage.findById(id)
                 .orElseThrow(() -> new RuntimeException("Фильм не найден"));
     }
@@ -61,13 +64,13 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void addLike(@PathVariable @Positive Long id, @PathVariable @Positive Long userId) {
         log.info("Пользователь {} ставит лайк фильму {}", userId, id);
         filmService.addLike(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
+    public void removeLike(@PathVariable @Positive Long id, @PathVariable @Positive Long userId) {
         log.info("Пользователь {} удаляет лайк у фильма {}", userId, id);
         filmService.removeLike(id, userId);
     }

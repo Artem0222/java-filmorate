@@ -1,7 +1,9 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Positive;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -13,6 +15,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
+@Validated
 @Slf4j
 @RestController
 @RequestMapping("/users")
@@ -33,7 +36,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User findById(@PathVariable Long id) {
+    public User findById(@PathVariable @Positive Long id) {
         return userStorage.findById(id)
                 .orElseThrow(() -> new RuntimeException("Пользователь не найден"));
     }
@@ -58,25 +61,25 @@ public class UserController {
 
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+    public void addFriend(@PathVariable @Positive Long id, @PathVariable @Positive Long friendId) {
         log.info("Пользователь {} добавляет в друзья {}", id, friendId);
         userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+    public void removeFriend(@PathVariable @Positive Long id, @PathVariable @Positive Long friendId) {
         log.info("Пользователь {} удаляет из друзей {}", id, friendId);
         userService.removeFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
-    public List<User> getFriends(@PathVariable Long id) {
+    public List<User> getFriends(@PathVariable @Positive Long id) {
         log.info("Запрос списка друзей пользователя {}", id);
         return userService.getFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public List<User> getCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+    public List<User> getCommonFriends(@PathVariable @Positive Long id, @PathVariable @Positive Long otherId) {
         log.info("Запрос общих друзей пользователей {} и {}", id, otherId);
         return userService.getCommonFriends(id, otherId);
     }
