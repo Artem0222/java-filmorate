@@ -1,9 +1,17 @@
 package ru.yandex.practicum.filmorate.model;
 
-public enum MpaRating {
-    G,
-    PG,
-    PG_13,
-    R,
-    NC_17
+import lombok.Data;
+
+@Data
+public class MpaRating {
+    private int id;
+    private String name;
+
+    public MpaRating() {
+    }
+
+    public MpaRating(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 }

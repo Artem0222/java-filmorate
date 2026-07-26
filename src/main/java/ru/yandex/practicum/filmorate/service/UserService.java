@@ -47,38 +47,53 @@ public class UserService {
         return userStorage.update(user);
     }
 
-
     public void addFriend(Long userId, Long friendId) {
-        User user = findById(userId);
-        User friend = findById(friendId);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        findById(userId);
+        findById(friendId);
+
+        // Добавляем друга (односторонняя связь)
+        userStorage.addFriend(userId, friendId);
+        log.info("Пользователь {} добавил в друзья {}", userId, friendId);
     }
 
     public void removeFriend(Long userId, Long friendId) {
-        User user = findById(userId);
-        User friend = findById(friendId);
 
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        findById(userId);
+        findById(friendId);
+
+
+        userStorage.removeFriend(userId, friendId);
+        log.info("Пользователь {} удалил из друзей {}", userId, friendId);
     }
 
     public Collection<User> getFriends(Long userId) {
-        User user = findById(userId);
-        return user.getFriends().stream()
+
+        findById(userId);
+
+
+        List<Long> friendIds = userStorage.getFriendIds(userId);
+
+
+        return friendIds.stream()
                 .map(this::findById)
                 .collect(Collectors.toList());
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {
-        User user = findById(userId);
-        User other = findById(otherId);
 
-        Set<Long> commonIds = new HashSet<>(user.getFriends());
-        commonIds.retainAll(other.getFriends());
+        findById(userId);
+        findById(otherId);
 
-        return commonIds.stream()
+
+        Set<Long> userFriends = new HashSet<>(userStorage.getFriendIds(userId));
+        Set<Long> otherFriends = new HashSet<>(userStorage.getFriendIds(otherId));
+
+
+        userFriends.retainAll(otherFriends);
+
+
+        return userFriends.stream()
                 .map(this::findById)
                 .collect(Collectors.toList());
     }

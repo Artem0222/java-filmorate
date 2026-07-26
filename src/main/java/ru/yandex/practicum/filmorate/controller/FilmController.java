@@ -3,36 +3,38 @@ package ru.yandex.practicum.filmorate.controller;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
 
-import java.time.LocalDate;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+
 import java.util.Collection;
 import java.util.List;
 
-@Validated
 @Slf4j
 @RequestMapping("/films")
 @RestController
 public class FilmController {
 
-    private static final LocalDate FIRST_FILM_DATE = LocalDate.of(1895, 12, 28);
-
-    private final FilmStorage filmStorage;
+    private final FilmDbStorage filmStorage;
     private final FilmService filmService;
 
     @Autowired
-    public FilmController(FilmStorage filmStorage, FilmService filmService) {
+    public FilmController(FilmDbStorage filmStorage, FilmService filmService) {
         this.filmStorage = filmStorage;
         this.filmService = filmService;
     }
-
 
     @GetMapping
     public Collection<Film> findAll() {
@@ -42,24 +44,22 @@ public class FilmController {
     @GetMapping("/{id}")
     public Film findById(@PathVariable @Positive Long id) {
         return filmStorage.findById(id)
-                .orElseThrow(() -> new RuntimeException("Фильм не найден"));
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        validateFilm(film);
         return filmStorage.save(film);
     }
 
     @PutMapping
-    public Film update(@RequestBody Film film) {
+    public Film update(@Valid @RequestBody Film film) {
         if (film.getId() == null) {
-            throw new ValidationException("id должен быть указан");
+            throw new ru.yandex.practicum.filmorate.exception.ValidationException("id должен быть указан");
         }
         if (!filmStorage.existsById(film.getId())) {
-            throw new NotFoundException("Фильм не найден");
+            throw new NotFoundException("Фильм с id " + film.getId() + " не найден");
         }
-        validateFilm(film);
         return filmStorage.update(film);
     }
 
@@ -79,23 +79,5 @@ public class FilmController {
     public List<Film> getPopular(@RequestParam(required = false) Integer count) {
         log.info("Запрос популярных фильмов, count={}", count);
         return filmService.getPopularFilms(count);
-    }
-
-    private void validateFilm(Film film) {
-        if (film.getName() == null || film.getName().isBlank()) {
-            throw new ValidationException("Название фильма не может быть пустым");
-        }
-        if (film.getDescription() != null && film.getDescription().length() > 200) {
-            throw new ValidationException("Максимальная длина описания — 200 символов");
-        }
-        if (film.getReleaseDate() == null) {
-            throw new ValidationException("Дата релиза должна быть указана");
-        }
-        if (film.getReleaseDate().isBefore(FIRST_FILM_DATE)) {
-            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
-        }
-        if (film.getDuration() == null || film.getDuration() <= 0) {
-            throw new ValidationException("Продолжительность фильма должна быть положительным числом");
-        }
     }
 }
