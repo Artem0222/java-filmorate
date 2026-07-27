@@ -24,6 +24,6 @@ public class Film {
     private Set<Genre> genres = new HashSet<>();
 
     public int getLikesCount() {
-        return likes.size();
+        return likes == null ? 0 : likes.size();
     }
 }
