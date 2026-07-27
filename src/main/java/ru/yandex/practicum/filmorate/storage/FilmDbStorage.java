@@ -59,7 +59,6 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film save(Film film) {
-
         if (film.getMpa() != null && film.getMpa().getId() != 0) {
             String checkMpaSql = "SELECT COUNT(*) FROM mpa_ratings WHERE id = ?";
             Integer count = jdbcTemplate.queryForObject(checkMpaSql, Integer.class, film.getMpa().getId());
@@ -68,7 +67,7 @@ public class FilmDbStorage implements FilmStorage {
             }
         }
 
-        // Проверка жанров
+
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             for (Genre genre : film.getGenres()) {
                 String checkGenreSql = "SELECT COUNT(*) FROM genres WHERE id = ?";
@@ -94,7 +93,6 @@ public class FilmDbStorage implements FilmStorage {
         }, keyHolder);
 
         film.setId(keyHolder.getKey().longValue());
-
 
         saveGenresForFilm(film);
 
