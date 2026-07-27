@@ -105,23 +105,27 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
+        if (!filmStorage.existsById(filmId)) {
+            throw new NotFoundException("Фильм с id " + filmId + " не найден");
+        }
+        if (!userStorage.existsById(userId)) { // Предполагается, что у userStorage есть existsById
+            throw new NotFoundException("Пользователь с id " + userId + " не найден");
+        }
 
-        userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-
-        film.getLikes().add(userId);
+        filmStorage.addLike(filmId, userId); // Сохраняем лайк в базу данных
+        log.info("Лайк от пользователя {} успешно добавлен фильму {}", userId, filmId);
     }
 
     public void removeLike(Long filmId, Long userId) {
-        Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
+        if (!filmStorage.existsById(filmId)) {
+            throw new NotFoundException("Фильм с id " + filmId + " не найден");
+        }
+        if (!userStorage.existsById(userId)) {
+            throw new NotFoundException("Пользователь с id " + userId + " не найден");
+        }
 
-        userStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-
-        film.getLikes().remove(userId);
+        filmStorage.removeLike(filmId, userId); // Удаляем лайк из базы данных
+        log.info("Лайк от пользователя {} успешно удален у фильма {}", userId, filmId);
     }
 
     public List<Film> getPopularFilms(Integer count) {

@@ -68,7 +68,6 @@ public class FilmDbStorage implements FilmStorage {
             ps.setString(2, film.getDescription());
             ps.setObject(3, film.getReleaseDate());
             ps.setInt(4, film.getDuration());
-            // Если mpa == null или id == 0, сохраняем NULL
             Integer mpaId = null;
             if (film.getMpa() != null && film.getMpa().getId() != 0) {
                 mpaId = film.getMpa().getId();
@@ -78,6 +77,8 @@ public class FilmDbStorage implements FilmStorage {
         }, keyHolder);
 
         film.setId(keyHolder.getKey().longValue());
+
+        System.out.println("СОХРАНЁН ID: " + film.getId());
         saveGenresForFilm(film);
 
         return film;
@@ -99,11 +100,24 @@ public class FilmDbStorage implements FilmStorage {
 
         String deleteGenresSql = "DELETE FROM film_genre WHERE film_id = ?";
         jdbcTemplate.update(deleteGenresSql, film.getId());
-
-
         saveGenresForFilm(film);
 
+
+        String deleteLikesSql = "DELETE FROM film_likes WHERE film_id = ?";
+        jdbcTemplate.update(deleteLikesSql, film.getId());
+        saveLikesForFilm(film);
+
         return film;
+    }
+
+
+    private void saveLikesForFilm(Film film) {
+        if (film.getLikes() != null && !film.getLikes().isEmpty()) {
+            String sql = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
+            for (Long userId : film.getLikes()) {
+                jdbcTemplate.update(sql, film.getId(), userId);
+            }
+        }
     }
 
     @Override
@@ -182,5 +196,17 @@ public class FilmDbStorage implements FilmStorage {
         String sql = "SELECT COUNT(*) FROM genres WHERE id = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, genreId);
         return count != null && count > 0;
+    }
+
+    @Override
+    public void addLike(Long filmId, Long userId) {
+        String sql = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
+        jdbcTemplate.update(sql, filmId, userId);
+    }
+
+    @Override
+    public void removeLike(Long filmId, Long userId) {
+        String sql = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
+        jdbcTemplate.update(sql, filmId, userId);
     }
 }

@@ -17,6 +17,10 @@ public interface FilmStorage {
 
     void deleteById(Long id);
 
+    void addLike(Long filmId, Long userId);
+
+    void removeLike(Long filmId, Long userId);
+
     boolean existsById(Long id);
 
     default boolean mpaExists(int mpaId) {
