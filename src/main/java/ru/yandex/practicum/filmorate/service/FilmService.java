@@ -11,6 +11,7 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -121,6 +122,9 @@ public class FilmService {
         if (count == null) {
             count = 10;
         }
+
+        Collection<Film> allFilms = filmStorage.findAll();
+        System.out.println("Всего фильмов в базе: " + allFilms.size());
 
         return filmStorage.findAll().stream()
                 .sorted((f1, f2) -> Integer.compare(f2.getLikesCount(), f1.getLikesCount()))
