@@ -59,26 +59,6 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film save(Film film) {
-
-        if (film.getMpa() != null && film.getMpa().getId() != 0) {
-            String checkMpaSql = "SELECT COUNT(*) FROM mpa_ratings WHERE id = ?";
-            Integer count = jdbcTemplate.queryForObject(checkMpaSql, Integer.class, film.getMpa().getId());
-            if (count == null || count == 0) {
-                throw new NotFoundException("Рейтинг MPA с id " + film.getMpa().getId() + " не найден");
-            }
-        }
-
-
-        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            for (Genre genre : film.getGenres()) {
-                String checkGenreSql = "SELECT COUNT(*) FROM genres WHERE id = ?";
-                Integer count = jdbcTemplate.queryForObject(checkGenreSql, Integer.class, genre.getId());
-                if (count == null || count == 0) {
-                    throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
-                }
-            }
-        }
-
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
                 "VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -89,13 +69,16 @@ public class FilmDbStorage implements FilmStorage {
             ps.setString(2, film.getDescription());
             ps.setObject(3, film.getReleaseDate());
             ps.setInt(4, film.getDuration());
-            ps.setObject(5, film.getMpa() != null ? film.getMpa().getId() : null);
+            // Если mpa == null или id == 0, сохраняем NULL
+            Integer mpaId = null;
+            if (film.getMpa() != null && film.getMpa().getId() != 0) {
+                mpaId = film.getMpa().getId();
+            }
+            ps.setObject(5, mpaId);
             return ps;
         }, keyHolder);
 
         film.setId(keyHolder.getKey().longValue());
-
-
         saveGenresForFilm(film);
 
         return film;
@@ -155,7 +138,9 @@ public class FilmDbStorage implements FilmStorage {
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             String sql = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
             for (Genre genre : film.getGenres()) {
-                jdbcTemplate.update(sql, film.getId(), genre.getId());
+                if (genre.getId() != 0) {
+                    jdbcTemplate.update(sql, film.getId(), genre.getId());
+                }
             }
         }
     }

@@ -48,19 +48,25 @@ public class FilmService {
         validateFilm(film);
 
 
-        if (film.getMpa() != null && film.getMpa().getId() != 0) {
-            boolean mpaExists = filmStorage.mpaExists(film.getMpa().getId());
-            if (!mpaExists) {
-                throw new NotFoundException("Рейтинг MPA с id " + film.getMpa().getId() + " не найден");
+        if (film.getMpa() != null) {
+            int mpaId = film.getMpa().getId();
+            if (mpaId != 0) {
+                boolean mpaExists = filmStorage.mpaExists(mpaId);
+                if (!mpaExists) {
+                    throw new NotFoundException("Рейтинг MPA с id " + mpaId + " не найден");
+                }
             }
         }
 
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             for (Genre genre : film.getGenres()) {
-                boolean genreExists = filmStorage.genreExists(genre.getId());
-                if (!genreExists) {
-                    throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
+                int genreId = genre.getId();
+                if (genreId != 0) {
+                    boolean genreExists = filmStorage.genreExists(genreId);
+                    if (!genreExists) {
+                        throw new NotFoundException("Жанр с id " + genreId + " не найден");
+                    }
                 }
             }
         }
