@@ -2,11 +2,9 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -14,7 +12,6 @@ import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.Collection;
 import java.util.List;
 
-@Validated
 @Slf4j
 @RequestMapping("/films")
 @RestController
@@ -37,23 +34,17 @@ public class FilmController {
     @GetMapping("/{id}")
     public Film findById(@PathVariable @Positive Long id) {
         return filmStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
+                .orElseThrow(() -> new RuntimeException("Фильм не найден"));
     }
 
     @PostMapping
     public Film create(@Valid @RequestBody Film film) {
-        return filmStorage.save(film);
+        return filmService.create(film);
     }
 
     @PutMapping
     public Film update(@Valid @RequestBody Film film) {
-        if (film.getId() == null) {
-            throw new ru.yandex.practicum.filmorate.exception.ValidationException("id должен быть указан");
-        }
-        if (!filmStorage.existsById(film.getId())) {
-            throw new NotFoundException("Фильм с id " + film.getId() + " не найден");
-        }
-        return filmStorage.update(film);
+        return filmService.update(film);
     }
 
     @PutMapping("/{id}/like/{userId}")

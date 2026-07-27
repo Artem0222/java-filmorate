@@ -1,15 +1,19 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class FilmService {
 
@@ -22,9 +26,40 @@ public class FilmService {
         this.userStorage = userStorage;
     }
 
-    // Поставить лайк фильму
-    public void addLike(Long filmId, Long userId) {
 
+    private void validateFilm(Film film) {
+        if (film.getName() == null || film.getName().isBlank()) {
+            throw new ValidationException("Название не может быть пустым");
+        }
+        if (film.getDescription() != null && film.getDescription().length() > 200) {
+            throw new ValidationException("Описание не может быть длиннее 200 символов");
+        }
+        if (film.getReleaseDate() != null &&
+                film.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+            throw new ValidationException("Дата релиза не может быть раньше 28 декабря 1895 года");
+        }
+        if (film.getDuration() == null || film.getDuration() <= 0) {
+            throw new ValidationException("Продолжительность должна быть положительным числом");
+        }
+    }
+
+    public Film create(Film film) {
+        validateFilm(film);
+        return filmStorage.save(film);
+    }
+
+    public Film update(Film film) {
+        if (film.getId() == null) {
+            throw new ValidationException("id должен быть указан");
+        }
+        if (!filmStorage.existsById(film.getId())) {
+            throw new NotFoundException("Фильм с id " + film.getId() + " не найден");
+        }
+        validateFilm(film);
+        return filmStorage.update(film);
+    }
+
+    public void addLike(Long filmId, Long userId) {
         Film film = filmStorage.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
 
@@ -34,7 +69,6 @@ public class FilmService {
 
         film.getLikes().add(userId);
     }
-
 
     public void removeLike(Long filmId, Long userId) {
         Film film = filmStorage.findById(filmId)
@@ -46,14 +80,12 @@ public class FilmService {
         film.getLikes().remove(userId);
     }
 
-
     public List<Film> getPopularFilms(Integer count) {
         if (count == null) {
-            count = 10;  // по умолчанию 10
+            count = 10;
         }
-
         return filmStorage.findAll().stream()
-                .sorted((f1, f2) -> Integer.compare(f2.getLikesCount(), f1.getLikesCount()))
+                .sorted((f1, f2) -> Integer.compare(f2.getLikes().size(), f1.getLikes().size()))
                 .limit(count)
                 .collect(Collectors.toList());
     }
