@@ -1,15 +1,17 @@
 package ru.yandex.practicum.filmorate.controller;
 
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 
 class FilmControllerTest {
 
@@ -17,7 +19,13 @@ class FilmControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new FilmController();
+
+        InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
+        UserStorage userStorage = new InMemoryUserStorage();
+
+        FilmService filmService = new FilmService(filmStorage, userStorage);
+
+        controller = new FilmController(filmStorage, filmService);
     }
 
     @Test
@@ -49,7 +57,7 @@ class FilmControllerTest {
     void shouldNotCreateFilmWithDescriptionTooLong() {
         Film film = new Film();
         film.setName("Фильм");
-        film.setDescription("A".repeat(201)); // 201 символ
+        film.setDescription("A".repeat(201));
         film.setReleaseDate(LocalDate.of(2000, 1, 1));
         film.setDuration(120);
 
@@ -61,7 +69,7 @@ class FilmControllerTest {
         Film film = new Film();
         film.setName("Фильм");
         film.setDescription("Описание");
-        film.setReleaseDate(LocalDate.of(1895, 12, 27)); // День раньше
+        film.setReleaseDate(LocalDate.of(1895, 12, 27));
         film.setDuration(120);
 
         assertThrows(ValidationException.class, () -> controller.create(film));
