@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
@@ -26,7 +28,6 @@ public class FilmService {
         this.userStorage = userStorage;
     }
 
-
     private void validateFilm(Film film) {
         if (film.getName() == null || film.getName().isBlank()) {
             throw new ValidationException("Название не может быть пустым");
@@ -45,6 +46,25 @@ public class FilmService {
 
     public Film create(Film film) {
         validateFilm(film);
+
+
+        if (film.getMpa() != null && film.getMpa().getId() != 0) {
+            boolean mpaExists = filmStorage.mpaExists(film.getMpa().getId());
+            if (!mpaExists) {
+                throw new NotFoundException("Рейтинг MPA с id " + film.getMpa().getId() + " не найден");
+            }
+        }
+
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            for (Genre genre : film.getGenres()) {
+                boolean genreExists = filmStorage.genreExists(genre.getId());
+                if (!genreExists) {
+                    throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
+                }
+            }
+        }
+
         return filmStorage.save(film);
     }
 
@@ -55,6 +75,25 @@ public class FilmService {
         if (!filmStorage.existsById(film.getId())) {
             throw new NotFoundException("Фильм с id " + film.getId() + " не найден");
         }
+
+
+        if (film.getMpa() != null && film.getMpa().getId() != 0) {
+            boolean mpaExists = filmStorage.mpaExists(film.getMpa().getId());
+            if (!mpaExists) {
+                throw new NotFoundException("Рейтинг MPA с id " + film.getMpa().getId() + " не найден");
+            }
+        }
+
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            for (Genre genre : film.getGenres()) {
+                boolean genreExists = filmStorage.genreExists(genre.getId());
+                if (!genreExists) {
+                    throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
+                }
+            }
+        }
+
         validateFilm(film);
         return filmStorage.update(film);
     }
@@ -65,7 +104,6 @@ public class FilmService {
 
         userStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-
 
         film.getLikes().add(userId);
     }

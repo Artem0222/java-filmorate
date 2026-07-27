@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
@@ -58,6 +59,26 @@ public class FilmDbStorage implements FilmStorage {
 
     @Override
     public Film save(Film film) {
+
+        if (film.getMpa() != null && film.getMpa().getId() != 0) {
+            String checkMpaSql = "SELECT COUNT(*) FROM mpa_ratings WHERE id = ?";
+            Integer count = jdbcTemplate.queryForObject(checkMpaSql, Integer.class, film.getMpa().getId());
+            if (count == null || count == 0) {
+                throw new NotFoundException("Рейтинг MPA с id " + film.getMpa().getId() + " не найден");
+            }
+        }
+
+        // Проверка жанров
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            for (Genre genre : film.getGenres()) {
+                String checkGenreSql = "SELECT COUNT(*) FROM genres WHERE id = ?";
+                Integer count = jdbcTemplate.queryForObject(checkGenreSql, Integer.class, genre.getId());
+                if (count == null || count == 0) {
+                    throw new NotFoundException("Жанр с id " + genre.getId() + " не найден");
+                }
+            }
+        }
+
         String sql = "INSERT INTO films (name, description, release_date, duration, mpa_id) " +
                 "VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -163,5 +184,19 @@ public class FilmDbStorage implements FilmStorage {
         public Genre mapRow(ResultSet rs, int rowNum) throws SQLException {
             return new Genre(rs.getInt("id"), rs.getString("name"));
         }
+    }
+
+    @Override
+    public boolean mpaExists(int mpaId) {
+        String sql = "SELECT COUNT(*) FROM mpa_ratings WHERE id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, mpaId);
+        return count != null && count > 0;
+    }
+
+    @Override
+    public boolean genreExists(int genreId) {
+        String sql = "SELECT COUNT(*) FROM genres WHERE id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, genreId);
+        return count != null && count > 0;
     }
 }

@@ -18,4 +18,12 @@ public interface FilmStorage {
     void deleteById(Long id);
 
     boolean existsById(Long id);
+
+    default boolean mpaExists(int mpaId) {
+        return true;
+    }
+
+    default boolean genreExists(int genreId) {
+        return true;
+    }
 }
