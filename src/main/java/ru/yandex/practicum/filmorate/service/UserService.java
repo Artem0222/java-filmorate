@@ -52,7 +52,7 @@ public class UserService {
         findById(userId);
         findById(friendId);
 
-        // Добавляем друга (односторонняя связь)
+
         userStorage.addFriend(userId, friendId);
         log.info("Пользователь {} добавил в друзья {}", userId, friendId);
     }
