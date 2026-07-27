@@ -3,11 +3,10 @@ package ru.yandex.practicum.filmorate.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.SqlTypeValue;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
+
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,6 +27,7 @@ public class GenreController {
         String sql = "SELECT * FROM genres ORDER BY id";
         return jdbcTemplate.query(sql, new GenreRowMapper());
     }
+
     @GetMapping("/{id}")
     public Genre getGenreById(@PathVariable int id) {
         String sql = "SELECT * FROM genres WHERE id = ?";
@@ -38,6 +38,7 @@ public class GenreController {
         }
         return genres.get(0);
     }
+
     private static class GenreRowMapper implements RowMapper<Genre> {
         @Override
         public Genre mapRow(ResultSet rs, int rowNum) throws SQLException {
