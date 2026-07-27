@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -48,9 +49,10 @@ class UserDbStorageTest {
 
         userStorage.addFriend(user1.getId(), user2.getId());
 
-        Collection<User> friends = userStorage.getFriends(user1.getId());
-        assertFalse(friends.isEmpty());
-        assertEquals(1, friends.size());
+        List<Long> friendIds = userStorage.getFriendIds(user1.getId());
+        assertFalse(friendIds.isEmpty());
+        assertEquals(1, friendIds.size());
+        assertEquals(user2.getId(), friendIds.get(0));
     }
 
     private User createTestUser() {
