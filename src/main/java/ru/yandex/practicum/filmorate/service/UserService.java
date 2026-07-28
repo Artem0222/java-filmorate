@@ -71,13 +71,12 @@ public class UserService {
 
         findById(userId);
 
-
         List<Long> friendIds = userStorage.getFriendIds(userId);
+        if (friendIds.isEmpty()) {
+            return new ArrayList<>();
+        }
 
-
-        return friendIds.stream()
-                .map(this::findById)
-                .collect(Collectors.toList());
+        return userStorage.findUsersByIds(friendIds);
     }
 
     public Collection<User> getCommonFriends(Long userId, Long otherId) {

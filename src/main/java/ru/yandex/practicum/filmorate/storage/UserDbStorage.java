@@ -6,13 +6,14 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.model.User;
 import org.springframework.context.annotation.Primary;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 @Primary
@@ -29,7 +30,6 @@ public class UserDbStorage implements UserStorage {
     public Collection<User> findAll() {
         String sql = "SELECT * FROM users";
         List<User> users = jdbcTemplate.query(sql, new UserRowMapper());
-
 
         for (User user : users) {
             loadFriendsForUser(user);
@@ -52,14 +52,33 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public User save(User user) {
-        String sql = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+    public List<User> findUsersByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
 
-        // Если имя не указано, используем логин
+        String placeholders = ids.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(","));
+        String sql = "SELECT * FROM users WHERE id IN (" + placeholders + ")";
+
+        return jdbcTemplate.query(sql, new UserRowMapper(), ids.toArray());
+    }
+
+    private void loadFriendsForUser(User user) {
+        String sql = "SELECT friend_id FROM user_friends WHERE user_id = ?";
+        List<Long> friendIds = jdbcTemplate.queryForList(sql, Long.class, user.getId());
+        user.setFriends(new HashSet<>(friendIds));
+    }
+
+    @Override
+    public User save(User user) {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
+
+        String sql = "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[]{"id"});
@@ -100,25 +119,22 @@ public class UserDbStorage implements UserStorage {
         return count != null && count > 0;
     }
 
-
+    @Override
     public void addFriend(Long userId, Long friendId) {
         String sql = "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)";
         jdbcTemplate.update(sql, userId, friendId);
     }
 
+    @Override
     public void removeFriend(Long userId, Long friendId) {
         String sql = "DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?";
         jdbcTemplate.update(sql, userId, friendId);
     }
 
+    @Override
     public List<Long> getFriendIds(Long userId) {
         String sql = "SELECT friend_id FROM user_friends WHERE user_id = ?";
         return jdbcTemplate.queryForList(sql, Long.class, userId);
-    }
-
-    private void loadFriendsForUser(User user) {
-        List<Long> friendIds = getFriendIds(user.getId());
-        user.setFriends(new HashSet<>(friendIds));
     }
 
     private static class UserRowMapper implements RowMapper<User> {
