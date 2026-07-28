@@ -2,9 +2,11 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
@@ -19,12 +21,12 @@ class FilmControllerTest {
 
     @BeforeEach
     void setUp() {
-
-        InMemoryFilmStorage filmStorage = new InMemoryFilmStorage();
+        FilmStorage filmStorage = new InMemoryFilmStorage();
         UserStorage userStorage = new InMemoryUserStorage();
 
-        FilmService filmService = new FilmService(filmStorage, userStorage);
+        JdbcTemplate jdbcTemplate = null;
 
+        FilmService filmService = new FilmService(filmStorage, userStorage, jdbcTemplate);
         controller = new FilmController(filmStorage, filmService);
     }
 
